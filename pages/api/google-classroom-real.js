@@ -35,6 +35,13 @@ export default async function handler(req, res) {
       case 'getCourses':
         data = await classroomService.getCourses();
         break;
+      case 'getCourseTeachers':
+        if (!courseId) {
+          return res.status(400).json({ message: 'Course ID required for getCourseTeachers' });
+        }
+        data = await classroomService.getCourseTeachers(courseId);
+        console.log('getCourseTeachers response for course', courseId, ':', JSON.stringify(data));
+        break;
       case 'getCourseGrades':
         if (!courseId) {
           return res.status(400).json({ message: 'Course ID required for getCourseGrades' });

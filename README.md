@@ -1,4 +1,4 @@
-# 📚 StudyBuddy 2.0
+# 📚 StudyBuddy 2.2
 
 <p align="center">
   <strong>Your ultimate companion for efficient and effective studying</strong>
@@ -30,6 +30,9 @@ Get a gentle nudge at **6:30 PM ET** if you have unsubmitted homework due tomorr
 
 ### Peer Chat Rooms
 Collaborate with classmates through dedicated chat rooms for studying, project planning, and homework discussions.
+
+### Teacher Contact
+Easily contact your teachers with the built-in assignment teacher reach-out function
 
 ---
 

@@ -6,6 +6,7 @@ import ClassCountdown from '../components/ClassCountdown';
 import ClassroomReauth from '../components/ClassroomReauth';
 import ClassroomPrompt from '../components/ClassroomPrompt';
 import StudyAssistModal from '../components/StudyAssistModal';
+import ContactTeacherDropdown from '../components/ContactTeacherDropdown';
 import { Container, Row, Col, Card, Button, Alert, Badge } from 'react-bootstrap';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -670,6 +671,11 @@ export default function Dashboard() {
                                 <i className="fas fa-robot me-1"></i>
                                 Study Assist
                               </Button>
+                              <ContactTeacherDropdown
+                                courseId={assignment.courseId}
+                                assignmentTitle={assignment.title}
+                                courseName={assignment.courseName}
+                              />
                             </div>
                           </Card.Body>
                         </Card>
@@ -917,6 +923,17 @@ export default function Dashboard() {
           border: none;
           transition: all 0.3s ease;
           background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+          overflow: visible;
+          position: relative;
+          z-index: 1;
+        }
+        
+        .assignment-cards .col {
+          overflow: visible;
+        }
+        
+        .assignment-cards {
+          overflow: visible;
         }
 
         .section-header-wrapper {
@@ -995,10 +1012,12 @@ export default function Dashboard() {
           overflow-wrap: anywhere;
           word-break: break-word;
         }
-        
-        .assignment-cards .card:hover {
+
+        .assignment-cards .card:hover,
+        .assignment-cards .card:focus-within {
           transform: translateY(-8px);
           box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+          z-index: 1000;
         }
         
         .study-suggestions .card {

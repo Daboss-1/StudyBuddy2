@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
 import StudyAssistModal from '../components/StudyAssistModal';
+import ContactTeacherDropdown from '../components/ContactTeacherDropdown';
 import { Container, Row, Col, Card, Button, Table, Badge, Alert, Spinner } from 'react-bootstrap';
 import { useRouter } from 'next/router';
 
@@ -399,7 +400,7 @@ export default function Grades() {
                             <th>Points Possible</th>
                             <th>Grade</th>
                             <th>Status</th>
-                            <th>Study Help</th>
+                            <th>Actions</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -444,21 +445,28 @@ export default function Grades() {
                                 </Badge>
                               </td>
                               <td>
-                                <Button
-                                  variant="outline-primary"
-                                  size="sm"
-                                  onClick={() => {
-                                    handleStudyAssist({
-                                      ...assignment,
-                                      courseId: course.id,
-                                      courseWorkId: assignment.courseWorkId || assignment.id,
-                                      courseName: course.name
-                                    })
-                                  }}
-                                >
-                                  <i className="fas fa-robot me-1"></i>
-                                  Study Assist
-                                </Button>
+                                <div className="d-flex gap-2 flex-wrap">
+                                  <Button
+                                    variant="outline-primary"
+                                    size="sm"
+                                    onClick={() => {
+                                      handleStudyAssist({
+                                        ...assignment,
+                                        courseId: course.id,
+                                        courseWorkId: assignment.courseWorkId || assignment.id,
+                                        courseName: course.name
+                                      })
+                                    }}
+                                  >
+                                    <i className="fas fa-robot me-1"></i>
+                                    Study Assist
+                                  </Button>
+                                  <ContactTeacherDropdown
+                                    courseId={course.id}
+                                    assignmentTitle={assignment.title}
+                                    courseName={course.name}
+                                  />
+                                </div>
                               </td>
                             </tr>
                           ))}
@@ -514,22 +522,29 @@ export default function Grades() {
                                 </div>
                               </div>
                               
-                              <Button
-                                variant="outline-primary"
-                                size="sm"
-                                className="w-100"
-                                onClick={() => {
-                                  handleStudyAssist({
-                                    ...assignment,
-                                    courseId: course.id,
-                                    courseWorkId: assignment.courseWorkId || assignment.id,
-                                    courseName: course.name
-                                  })
-                                }}
-                              >
-                                <i className="fas fa-robot me-1"></i>
-                                Get Study Assist
-                              </Button>
+                              <div className="d-flex gap-2">
+                                <Button
+                                  variant="outline-primary"
+                                  size="sm"
+                                  className="flex-fill"
+                                  onClick={() => {
+                                    handleStudyAssist({
+                                      ...assignment,
+                                      courseId: course.id,
+                                      courseWorkId: assignment.courseWorkId || assignment.id,
+                                      courseName: course.name
+                                    })
+                                  }}
+                                >
+                                  <i className="fas fa-robot me-1"></i>
+                                  Study Assist
+                                </Button>
+                                <ContactTeacherDropdown
+                                  courseId={course.id}
+                                  assignmentTitle={assignment.title}
+                                  courseName={course.name}
+                                />
+                              </div>
                             </Card.Body>
                           </Card>
                         ))}
