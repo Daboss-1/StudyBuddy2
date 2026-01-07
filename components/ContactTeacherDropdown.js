@@ -3,12 +3,13 @@ import { Dropdown, Spinner } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function ContactTeacherDropdown({ courseId, assignmentTitle, courseName }) {
-  const { callRealClassroomAPI } = useAuth();
+  const { callRealClassroomAPI, hasScopeSet, requestProfileAccess } = useAuth();
   const dropdownRef = useRef(null);
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);
   const [error, setError] = useState(null);
+  const [needsPermission, setNeedsPermission] = useState(false);
 
   const setParentStackingContext = (isOpen) => {
     const dropdownEl = dropdownRef.current;
@@ -41,7 +42,40 @@ export default function ContactTeacherDropdown({ courseId, assignmentTitle, cour
 
   const handleToggle = (isOpen) => {
     setParentStackingContext(isOpen);
-    if (isOpen) fetchTeachers();
+    if (isOpen) {
+      // Check if we have the necessary scopes for teacher profile info
+      // Accept either CLASSROOM_PROFILE or CLASSROOM_BASIC (which includes profile scopes)
+      const hasProfileAccess = hasScopeSet('CLASSROOM_PROFILE') || hasScopeSet('CLASSROOM_BASIC');
+      if (!hasProfileAccess) {
+        setNeedsPermission(true);
+        setFetched(true);
+        return;
+      }
+      setNeedsPermission(false);
+      fetchTeachers();
+    }
+  };
+
+  const handleGrantPermission = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Force prompt to re-authenticate with proper scopes
+      const success = await requestProfileAccess(true);
+      if (success) {
+        setNeedsPermission(false);
+        setFetched(false); // Reset fetched state so we can fetch again
+        // Now fetch teachers with the new permissions
+        await fetchTeachers();
+      } else {
+        setError('Failed to grant permissions. Please try again.');
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error('Error granting permission:', err);
+      setError('Failed to grant permissions. Please try again.');
+      setLoading(false);
+    }
   };
 
   const fetchTeachers = async () => {
@@ -74,7 +108,15 @@ export default function ContactTeacherDropdown({ courseId, assignmentTitle, cour
       }
     } catch (err) {
       console.error('Error fetching teachers:', err);
-      setError('Could not load teachers: ' + err.message);
+      
+      // Check if it's a permission error
+      if (err.message && err.message.includes('permission')) {
+        console.log('Permission error detected, prompting user for access');
+        setNeedsPermission(true);
+        setError(null);
+      } else {
+        setError('Could not load teachers: ' + err.message);
+      }
     } finally {
       setLoading(false);
       setFetched(true);
@@ -105,28 +147,39 @@ export default function ContactTeacherDropdown({ courseId, assignmentTitle, cour
       </Dropdown.Toggle>
 
       <Dropdown.Menu className="contact-teacher-menu">
-        {loading && (
+        {needsPermission && (
+          <Dropdown.Item 
+            onClick={handleGrantPermission}
+            className="text-primary"
+            disabled={loading}
+          >
+            <i className="fas fa-lock me-2"></i>
+            {loading ? 'Requesting permission...' : 'Allow access to view teacher info'}
+          </Dropdown.Item>
+        )}
+        
+        {loading && !needsPermission && (
           <Dropdown.Item disabled>
             <Spinner animation="border" size="sm" className="me-2" />
             Loading teachers...
           </Dropdown.Item>
         )}
         
-        {error && (
+        {error && !needsPermission && (
           <Dropdown.Item disabled className="text-danger">
             <i className="fas fa-exclamation-circle me-2"></i>
             {error}
           </Dropdown.Item>
         )}
         
-        {!loading && !error && teachers.length === 0 && fetched && (
+        {!loading && !error && !needsPermission && teachers.length === 0 && fetched && (
           <Dropdown.Item disabled>
             <i className="fas fa-info-circle me-2"></i>
             No teachers found (courseId: {courseId})
           </Dropdown.Item>
         )}
         
-        {!loading && teachers.map((teacher, index) => (
+        {!loading && !needsPermission && teachers.map((teacher, index) => (
           <Dropdown.Item 
             key={teacher.id || index}
             onClick={() => handleContactTeacher(teacher)}

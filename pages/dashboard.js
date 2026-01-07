@@ -433,6 +433,54 @@ export default function Dashboard() {
         </div>
       </Container>
 
+      {/* Mock Data Warning - Show when not connected to real Classroom */}
+      {!dashboardData.classroomConnected && !dashboardData.loading && (
+        <Container className="mt-4">
+          <Alert variant="info" className="shadow-sm border-0">
+            <Row className="align-items-center">
+              <Col xs={12} md={8}>
+                <div className="d-flex align-items-start">
+                  <div className="me-3">
+                    <i className="fas fa-info-circle fa-2x text-info"></i>
+                  </div>
+                  <div>
+                    <Alert.Heading className="h5 mb-2">
+                      You're Viewing Sample Data
+                    </Alert.Heading>
+                    <p className="mb-2">
+                      Connect your Google Classroom account to see your real assignments, grades, and study suggestions.
+                    </p>
+                    <ul className="small mb-0">
+                      <li>View your actual courses and assignments</li>
+                      <li>Get AI study help based on real materials</li>
+                      <li>Track grades and submission status</li>
+                      <li>Contact your teachers directly</li>
+                    </ul>
+                  </div>
+                </div>
+              </Col>
+              <Col xs={12} md={4} className="text-center text-md-end mt-3 mt-md-0">
+                <Button 
+                  variant="primary" 
+                  size="lg"
+                  onClick={handleEnableClassroomAccess}
+                  className="w-100 w-md-auto"
+                >
+                  <i className="fab fa-google me-2"></i>
+                  Connect Classroom
+                </Button>
+                <div className="mt-2">
+                  <Link href="/settings?tab=permissions" className="small text-muted">
+                    <i className="fas fa-shield-alt me-1"></i>
+                    Manage Permissions
+                  </Link>
+                </div>
+              </Col>
+            </Row>
+          </Alert>
+        </Container>
+      )}
+
       {/* Token Expiration Alert */}
       {tokenExpired && (
         <Container className="mt-4">

@@ -2,12 +2,21 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
 import Layout from '../components/Layout';
-import { Container, Row, Col, Card, Form, Button, Alert, Tab, Tabs } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, Tab, Tabs, Badge, Spinner } from 'react-bootstrap';
 import { useRouter } from 'next/router';
 import { updateUser } from '../lib/firestore';
 
 export default function Settings() {
-  const { user, loading } = useAuth();
+  const { 
+    user, 
+    loading, 
+    requestDriveAccess, 
+    requestGmailAccess, 
+    hasScopeSet,
+    hasClassroomToken,
+    getCachedClassroomData,
+    enableClassroomAccess
+  } = useAuth();
   const { 
     settings, 
     updateLunchTime, 
@@ -29,12 +38,27 @@ export default function Settings() {
   const [homeworkReminderEnabled, setHomeworkReminderEnabled] = useState(true);
   const [savingEmailPref, setSavingEmailPref] = useState(false);
   const [savingReminderPref, setSavingReminderPref] = useState(false);
+  
+  // Scope management state
+  const [scopeStatus, setScopeStatus] = useState({
+    classroom: false,
+    drive: false,
+    gmail: false
+  });
+  const [requestingScope, setRequestingScope] = useState(null);
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/signup');
     }
   }, [user, loading, router]);
+
+  // Handle query parameters to switch tabs (e.g., ?tab=permissions)
+  useEffect(() => {
+    if (router.query.tab && ['schedule', 'preferences', 'permissions'].includes(router.query.tab)) {
+      setActiveTab(router.query.tab);
+    }
+  }, [router.query.tab]);
 
   // Load email notification preference from user data
   useEffect(() => {
@@ -43,6 +67,34 @@ export default function Settings() {
       setHomeworkReminderEnabled(user.homeworkReminderEnabled !== false);
     }
   }, [user]);
+
+  // Check scope status and verify actual Classroom connection
+  useEffect(() => {
+    const checkRealConnection = async () => {
+      // Check if they have a valid Classroom token
+      const hasValidToken = hasClassroomToken && hasClassroomToken();
+      
+      let actuallyConnected = false;
+      if (hasValidToken && getCachedClassroomData) {
+        // Verify token works by trying to get data
+        try {
+          const testData = await getCachedClassroomData('courses');
+          actuallyConnected = testData && testData.length > 0;
+        } catch (error) {
+          console.log('Classroom connection check failed:', error.message);
+          actuallyConnected = false;
+        }
+      }
+      
+      setScopeStatus({
+        classroom: actuallyConnected,
+        drive: hasValidToken && hasScopeSet('DRIVE'),
+        gmail: hasValidToken && hasScopeSet('GMAIL')
+      });
+    };
+    
+    checkRealConnection();
+  }, [hasClassroomToken, hasScopeSet, getCachedClassroomData]);
 
   useEffect(() => {
     if (settings.schedule) {
@@ -125,6 +177,36 @@ export default function Settings() {
       showTip('Failed to update reminder preference. Please try again.', 'danger');
     } finally {
       setSavingReminderPref(false);
+    }
+  };
+
+  const handleRequestScope = async (scopeName) => {
+    setRequestingScope(scopeName);
+    try {
+      let success = false;
+      
+      if (scopeName === 'classroom') {
+        await enableClassroomAccess();
+        success = true;
+        // Reload page to refresh connection status
+        setTimeout(() => window.location.reload(), 1000);
+      } else if (scopeName === 'drive') {
+        success = await requestDriveAccess();
+      } else if (scopeName === 'gmail') {
+        success = await requestGmailAccess();
+      }
+      
+      if (success) {
+        setScopeStatus(prev => ({ ...prev, [scopeName]: true }));
+        showTip(`${scopeName.charAt(0).toUpperCase() + scopeName.slice(1)} access granted!`, 'success', 4000);
+      } else {
+        showTip(`Failed to grant ${scopeName} access. Please try again.`, 'danger', 4000);
+      }
+    } catch (error) {
+      console.error(`Error requesting ${scopeName} access:`, error);
+      showTip(`Error: ${error.message}`, 'danger', 4000);
+    } finally {
+      setRequestingScope(null);
     }
   };
 
@@ -420,6 +502,242 @@ export default function Settings() {
                       </Card>
                     </div>
                   </Tab>
+
+                  {/* Permissions Tab */}
+                  <Tab eventKey="permissions" title={
+                    <span><i className="fas fa-shield-alt me-2"></i>Permissions</span>
+                  }>
+                    <div className="permissions-settings">
+                      <h4 className="mb-3">OAuth Permissions & Scopes</h4>
+                      <p className="text-muted mb-4">
+                        Manage which permissions you've granted to StudyBuddy. Request additional permissions as needed for specific features.
+                      </p>
+
+                      {/* Classroom Access */}
+                      <Card className="mb-3 permission-card">
+                        <Card.Body>
+                          <Row className="align-items-center">
+                            <Col xs={12} md={8}>
+                              <div className="d-flex align-items-start">
+                                <div className="permission-icon me-3">
+                                  <i className="fas fa-chalkboard-teacher fa-2x text-primary"></i>
+                                </div>
+                                <div>
+                                  <h5 className="mb-2">
+                                    Google Classroom Access
+                                    {scopeStatus.classroom && (
+                                      <Badge bg="success" className="ms-2">
+                                        <i className="fas fa-check-circle me-1"></i>Granted
+                                      </Badge>
+                                    )}
+                                  </h5>
+                                  <p className="text-muted mb-2">
+                                    Required to view your courses, assignments, grades, and class materials.
+                                  </p>
+                                  <ul className="small text-muted mb-0">
+                                    <li>View courses and assignments</li>
+                                    <li>Access grades and submissions</li>
+                                    <li>Read class rosters and teacher info</li>
+                                  </ul>
+                                </div>
+                              </div>
+                            </Col>
+                            <Col xs={12} md={4} className="text-end mt-3 mt-md-0">
+                              {scopeStatus.classroom ? (
+                                <Badge bg="success" pill className="px-3 py-2">
+                                  <i className="fas fa-check me-1"></i>Active
+                                </Badge>
+                              ) : (
+                                <div>
+                                  <Alert variant="warning" className="mb-2 small">
+                                    <i className="fas fa-exclamation-triangle me-1"></i>
+                                    Not connected - using mock data
+                                  </Alert>
+                                  <Button
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => handleRequestScope('classroom')}
+                                    disabled={requestingScope === 'classroom'}
+                                  >
+                                    {requestingScope === 'classroom' ? (
+                                      <>
+                                        <Spinner animation="border" size="sm" className="me-2" />
+                                        Connecting...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <i className="fab fa-google me-2"></i>
+                                        Connect Classroom
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              )}
+                            </Col>
+                          </Row>
+                        </Card.Body>
+                      </Card>
+
+                      {/* Drive Access */}
+                      <Card className="mb-3 permission-card">
+                        <Card.Body>
+                          <Row className="align-items-center">
+                            <Col xs={12} md={8}>
+                              <div className="d-flex align-items-start">
+                                <div className="permission-icon me-3">
+                                  <i className="fab fa-google-drive fa-2x text-success"></i>
+                                </div>
+                                <div>
+                                  <h5 className="mb-2">
+                                    Google Drive Access
+                                    {scopeStatus.drive && (
+                                      <Badge bg="success" className="ms-2">
+                                        <i className="fas fa-check-circle me-1"></i>Granted
+                                      </Badge>
+                                    )}
+                                  </h5>
+                                  <p className="text-muted mb-2">
+                                    Allows Study Assist to read files attached to assignments for better AI help.
+                                  </p>
+                                  <ul className="small text-muted mb-0">
+                                    <li>Read Google Docs, Sheets, and Slides</li>
+                                    <li>Access PDF attachments from teachers</li>
+                                    <li>Include file content in AI study sessions</li>
+                                  </ul>
+                                  {!scopeStatus.drive && (
+                                    <Alert variant="info" className="mt-2 mb-0 small">
+                                      <i className="fas fa-info-circle me-1"></i>
+                                      This permission is requested automatically when you open Study Assist with file attachments
+                                    </Alert>
+                                  )}
+                                </div>
+                              </div>
+                            </Col>
+                            <Col xs={12} md={4} className="text-end mt-3 mt-md-0">
+                              {scopeStatus.drive ? (
+                                <Badge bg="success" pill className="px-3 py-2">
+                                  <i className="fas fa-check me-1"></i>Active
+                                </Badge>
+                              ) : (
+                                <Button
+                                  variant="outline-success"
+                                  size="sm"
+                                  onClick={() => handleRequestScope('drive')}
+                                  disabled={requestingScope === 'drive'}
+                                >
+                                  {requestingScope === 'drive' ? (
+                                    <>
+                                      <Spinner animation="border" size="sm" className="me-2" />
+                                      Requesting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <i className="fab fa-google me-2"></i>
+                                      Grant Access
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </Col>
+                          </Row>
+                        </Card.Body>
+                      </Card>
+
+                      {/* Gmail Access (Future Feature) */}
+                      <Card className="mb-3 permission-card">
+                        <Card.Body>
+                          <Row className="align-items-center">
+                            <Col xs={12} md={8}>
+                              <div className="d-flex align-items-start">
+                                <div className="permission-icon me-3">
+                                  <i className="fas fa-envelope fa-2x text-danger"></i>
+                                </div>
+                                <div>
+                                  <h5 className="mb-2">
+                                    Gmail Send Access
+                                    {scopeStatus.gmail && (
+                                      <Badge bg="success" className="ms-2">
+                                        <i className="fas fa-check-circle me-1"></i>Granted
+                                      </Badge>
+                                    )}
+                                    <Badge bg="secondary" className="ms-2">Future Feature</Badge>
+                                  </h5>
+                                  <p className="text-muted mb-2">
+                                    Would allow sending emails directly from StudyBuddy (not currently used).
+                                  </p>
+                                  <ul className="small text-muted mb-0">
+                                    <li>Send emails on your behalf</li>
+                                    <li>Compose messages to teachers</li>
+                                    <li>Automated email notifications</li>
+                                  </ul>
+                                  <Alert variant="secondary" className="mt-2 mb-0 small">
+                                    <i className="fas fa-lightbulb me-1"></i>
+                                    Currently, "Contact Teacher" opens Gmail in a new tab without requiring this permission
+                                  </Alert>
+                                </div>
+                              </div>
+                            </Col>
+                            <Col xs={12} md={4} className="text-end mt-3 mt-md-0">
+                              {scopeStatus.gmail ? (
+                                <Badge bg="success" pill className="px-3 py-2">
+                                  <i className="fas fa-check me-1"></i>Active
+                                </Badge>
+                              ) : (
+                                <Button
+                                  variant="outline-secondary"
+                                  size="sm"
+                                  onClick={() => handleRequestScope('gmail')}
+                                  disabled={requestingScope === 'gmail'}
+                                >
+                                  {requestingScope === 'gmail' ? (
+                                    <>
+                                      <Spinner animation="border" size="sm" className="me-2" />
+                                      Requesting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <i className="fab fa-google me-2"></i>
+                                      Grant Access
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </Col>
+                          </Row>
+                        </Card.Body>
+                      </Card>
+
+                      {/* Security Note */}
+                      <Card className="border-info">
+                        <Card.Body>
+                          <h6 className="text-info">
+                            <i className="fas fa-shield-alt me-2"></i>
+                            Privacy & Security
+                          </h6>
+                          <p className="small text-muted mb-2">
+                            StudyBuddy uses OAuth 2.0 incremental consent, which means:
+                          </p>
+                          <ul className="small text-muted mb-2">
+                            <li>You only grant permissions as you need them</li>
+                            <li>You can revoke permissions anytime through your Google Account settings</li>
+                            <li>We never store your passwords - authentication is handled by Google</li>
+                            <li>All permissions are read-only except where explicitly stated</li>
+                          </ul>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="p-0"
+                            href="https://myaccount.google.com/permissions"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Manage Google Account Permissions
+                            <i className="fas fa-external-link-alt ms-1"></i>
+                          </Button>
+                        </Card.Body>
+                      </Card>
+                    </div>
+                  </Tab>
                 </Tabs>
               </Card.Body>
             </Card>
@@ -530,6 +848,33 @@ export default function Settings() {
         :global(.email-toggle .form-check-input:checked) {
           background-color: #10b981;
           border-color: #10b981;
+        }
+
+        .permission-card {
+          border-radius: 15px;
+          border: none;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+          transition: all 0.3s ease;
+        }
+
+        .permission-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+        }
+
+        .permission-icon {
+          min-width: 50px;
+        }
+
+        .permissions-settings h5 {
+          font-size: 1.1rem;
+          font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+          .permission-card .text-end {
+            text-align: left !important;
+          }
         }
       `}</style>
     </Layout>

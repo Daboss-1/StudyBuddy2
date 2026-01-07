@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Modal, Button, Form, Alert, Spinner, Card, Badge, Collapse, ListGroup } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
+import { InlineDriveAccessPrompt } from './DriveAccessPrompt';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -16,8 +17,27 @@ export default function StudyAssistModal({ show, onHide, assignment }) {
   const [selectedMaterials, setSelectedMaterials] = useState(new Set());
   const [loadingMaterials, setLoadingMaterials] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [hasDriveAccess, setHasDriveAccess] = useState(false);
   const sectionRefs = useRef({});
-  const { getValidClassroomToken } = useAuth();
+  const { getValidClassroomToken, requestDriveAccess, hasScopeSet } = useAuth();
+
+  // Check Drive access on mount and when modal opens
+  useEffect(() => {
+    if (show) {
+      setHasDriveAccess(hasScopeSet('DRIVE'));
+    }
+  }, [show, hasScopeSet]);
+
+  // Handle Drive access grant
+  const handleGrantDriveAccess = async () => {
+    const success = await requestDriveAccess();
+    if (success) {
+      setHasDriveAccess(true);
+      // Refetch materials now that we have access
+      await fetchMaterials();
+    }
+    return success;
+  };
 
   // Fetch materials with file attachments when modal opens
   const fetchMaterials = async () => {
@@ -63,16 +83,33 @@ export default function StudyAssistModal({ show, onHide, assignment }) {
         if (data.data.attachments) {
           data.data.attachments.forEach((attachment, index) => {
             const materialId = `attachment_${index}`;
-            combinedMaterials.push({
-              id: materialId,
-              title: attachment.name,
-              type: attachment.type,
-              content: `[File Attachment: ${attachment.name}] - This file will be attached to the AI`,
-              hasAttachment: true,
-              attachmentData: attachment,
-              fileType: attachment.mimeType,
-              isStudentWork: attachment.fileData?.isStudentWork || false
-            });
+            
+            // Check if this attachment requires Drive access
+            if (attachment.requiresDriveAccess) {
+              combinedMaterials.push({
+                id: materialId,
+                title: attachment.name,
+                type: attachment.type,
+                content: `[File: ${attachment.name}] - Requires Google Drive access to attach`,
+                hasAttachment: true, // Mark as attachment so it shows properly
+                requiresDriveAccess: true, // But flag that it needs Drive access
+                attachmentData: attachment,
+                driveFileId: attachment.driveFileId,
+                error: attachment.error,
+                isStudentWork: false // These come from attachments array, determine from context
+              });
+            } else {
+              combinedMaterials.push({
+                id: materialId,
+                title: attachment.name,
+                type: attachment.type,
+                content: `[File Attachment: ${attachment.name}] - This file will be attached to the AI`,
+                hasAttachment: true,
+                attachmentData: attachment,
+                fileType: attachment.mimeType,
+                isStudentWork: attachment.fileData?.isStudentWork || false
+              });
+            }
           });
         }
         
@@ -437,6 +474,14 @@ Remember: Be BRIEF. No paragraphs. Use examples to teach, not direct answers.`;
               {assignment.maxPoints && (
                 <p><strong>Points:</strong> {assignment.maxPoints}</p>
               )}
+              {/* Show Drive access prompt if needed */}
+              {!hasDriveAccess && materials.filter(m => m.hasAttachment).length > 0 && (
+                <InlineDriveAccessPrompt 
+                  onGrantAccess={handleGrantDriveAccess}
+                  variant="warning"
+                />
+              )}
+              
               {/* Show fetched materials with checkboxes, separated by teacher/student */}
               <div>
                 <div className="d-flex justify-content-between align-items-center mb-2">
@@ -447,6 +492,8 @@ Remember: Be BRIEF. No paragraphs. Use examples to teach, not direct answers.`;
                         size="sm" 
                         variant="outline-primary" 
                         onClick={selectAllMaterials}
+                        disabled={!hasDriveAccess}
+                        title={!hasDriveAccess ? "Grant Drive access first" : ""}
                         className="me-2"
                       >
                         Select All
@@ -455,6 +502,8 @@ Remember: Be BRIEF. No paragraphs. Use examples to teach, not direct answers.`;
                         size="sm" 
                         variant="outline-secondary" 
                         onClick={deselectAllMaterials}
+                        disabled={!hasDriveAccess}
+                        title={!hasDriveAccess ? "Grant Drive access first" : ""}
                       >
                         Deselect All
                       </Button>
@@ -485,6 +534,8 @@ Remember: Be BRIEF. No paragraphs. Use examples to teach, not direct answers.`;
                                     type="checkbox"
                                     checked={selectedMaterials.has(material.id)}
                                     onChange={() => toggleMaterialSelection(material.id)}
+                                    disabled={!hasDriveAccess}
+                                    title={!hasDriveAccess ? "Grant Drive access to select files" : ""}
                                     className="me-2 mt-1"
                                   />
                                 )}
@@ -494,7 +545,12 @@ Remember: Be BRIEF. No paragraphs. Use examples to teach, not direct answers.`;
                                       <i className="fas fa-file-pdf me-2 text-danger"></i>
                                       <strong>{material.title}</strong>
                                       <Badge bg="primary" className="ms-2">Teacher File</Badge>
-                                      {selectedMaterials.has(material.id) && (
+                                      {!hasDriveAccess && (
+                                        <Badge bg="secondary" className="ms-1">
+                                          <i className="fas fa-lock me-1"></i>Requires Drive Access
+                                        </Badge>
+                                      )}
+                                      {selectedMaterials.has(material.id) && hasDriveAccess && (
                                         <Badge bg="success" className="ms-1">
                                           <i className="fas fa-check me-1"></i>Selected
                                         </Badge>
@@ -531,6 +587,8 @@ Remember: Be BRIEF. No paragraphs. Use examples to teach, not direct answers.`;
                                     type="checkbox"
                                     checked={selectedMaterials.has(material.id)}
                                     onChange={() => toggleMaterialSelection(material.id)}
+                                    disabled={!hasDriveAccess}
+                                    title={!hasDriveAccess ? "Grant Drive access to select files" : ""}
                                     className="me-2 mt-1"
                                   />
                                 )}
@@ -540,7 +598,12 @@ Remember: Be BRIEF. No paragraphs. Use examples to teach, not direct answers.`;
                                       <i className="fas fa-file-pdf me-2 text-danger"></i>
                                       <strong>{material.title}</strong>
                                       <Badge bg="success" className="ms-2">Your Work</Badge>
-                                      {selectedMaterials.has(material.id) && (
+                                      {!hasDriveAccess && (
+                                        <Badge bg="secondary" className="ms-1">
+                                          <i className="fas fa-lock me-1"></i>Requires Drive Access
+                                        </Badge>
+                                      )}
+                                      {selectedMaterials.has(material.id) && hasDriveAccess && (
                                         <Badge bg="warning" className="ms-1">
                                           <i className="fas fa-check me-1"></i>Selected
                                         </Badge>

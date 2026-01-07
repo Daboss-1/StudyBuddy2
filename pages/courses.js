@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
 import Layout from '../components/Layout';
 import ClassroomEmptyNotice from '../components/ClassroomEmptyNotice';
-import { Container, Row, Col, Card, Button, Form, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Badge, Alert } from 'react-bootstrap';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 
@@ -15,7 +15,8 @@ export default function Courses() {
     getCachedClassroomData, 
     subscribeToCacheUpdates, 
     hasClassroomToken,
-    cacheInitialized 
+    cacheInitialized,
+    enableClassroomAccess
   } = useAuth();
   const { settings } = useSettings();
   const router = useRouter();
@@ -241,11 +242,23 @@ export default function Courses() {
               Showing real Google Classroom data (cached for efficiency)
             </div>
           )}
-          {!isRealData && user.hasClassroomAccess && (
-            <div className="alert alert-info mt-3">
-              <i className="fas fa-info-circle me-2"></i>
-              Showing simulated course data - Enable Classroom access for real data
-            </div>
+          {!isRealData && (
+            <Alert variant="warning" className="mt-3">
+              <Alert.Heading>
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                You're Viewing Sample Data
+              </Alert.Heading>
+              <p className="mb-2">
+                Connect your Google Classroom to see your real courses and assignments.
+              </p>
+              <Button variant="primary" onClick={enableClassroomAccess} className="me-2">
+                <i className="fab fa-google me-2"></i>
+                Connect Classroom
+              </Button>
+              <small className="text-muted">
+                or go to <a href="/settings?tab=permissions">Settings → Permissions</a>
+              </small>
+            </Alert>
           )}
         </div>
       </Container>

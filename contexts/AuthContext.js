@@ -276,13 +276,20 @@ export const AuthProvider = ({ children }) => {
   const enableClassroomAccess = async () => {
     if (!user) {
       alert('Please log in first');
-      return;
+      return false;
     }
     
     try {
-      // Request Google Classroom access token
-      await classroomAuth.requestAccessToken();
+      console.log('Requesting Google Classroom access token...');
+      // Request Google Classroom access token - force consent to ensure fresh token
+      const token = await classroomAuth.requestAccessToken(true);
+      
+      if (!token) {
+        console.error('No token returned from OAuth flow');
+        return false;
+      }
 
+      console.log('Successfully obtained Classroom access token');
       // Immediately mark access as enabled in local state so UI can react
       setHasClassroomAccess(true);
       
@@ -375,6 +382,15 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       
       if (!response.ok) {
+        // Check if it's a scope issue
+        if (data.message && data.message.includes('insufficient authentication scopes')) {
+          console.error('Token has insufficient scopes - clearing stale scope data');
+          // Clear stale scope data so next auth will request proper scopes
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('google_granted_scopes');
+          }
+          setHasClassroomAccess(false);
+        }
         throw new Error(data.message || 'Real Classroom API call failed');
       }
       console.log('Real Classroom API response:', data);
@@ -445,6 +461,45 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Request additional OAuth scopes incrementally
+  const requestDriveAccess = async () => {
+    try {
+      console.log('Requesting Drive access...');
+      await classroomAuth.requestDriveAccess();
+      return true;
+    } catch (error) {
+      console.error('Failed to get Drive access:', error);
+      return false;
+    }
+  };
+
+  const requestGmailAccess = async () => {
+    try {
+      console.log('Requesting Gmail access...');
+      await classroomAuth.requestGmailAccess();
+      return true;
+    } catch (error) {
+      console.error('Failed to get Gmail access:', error);
+      return false;
+    }
+  };
+
+  const requestProfileAccess = async (forcePrompt = false) => {
+    try {
+      console.log('Requesting Profile access...');
+      await classroomAuth.requestProfileAccess(forcePrompt);
+      return true;
+    } catch (error) {
+      console.error('Failed to get Profile access:', error);
+      return false;
+    }
+  };
+
+  // Check if specific scope set is granted
+  const hasScopeSet = (scopeSetName) => {
+    return classroomAuth.hasScopeSet(scopeSetName);
+  };
+
   const value = {
     user,
     loading,
@@ -464,7 +519,12 @@ export const AuthProvider = ({ children }) => {
     subscribeToCacheUpdates,
     getCacheStats,
     clearClassroomCache,
-    cacheInitialized
+    cacheInitialized,
+    // Incremental consent methods
+    requestDriveAccess,
+    requestGmailAccess,
+    requestProfileAccess,
+    hasScopeSet
   };
 
   return (

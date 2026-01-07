@@ -2,8 +2,79 @@ import { useState } from 'react';
 import { Modal, Button, Alert } from 'react-bootstrap';
 import { useAuth } from '../contexts/AuthContext';
 
+// Inline prompt component for embedding in other components
+export function InlineDriveAccessPrompt({ onGrantAccess, variant = 'info' }) {
+  const [requesting, setRequesting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleGrantAccess = async () => {
+    setRequesting(true);
+    setError('');
+    
+    try {
+      const success = await onGrantAccess();
+      if (!success) {
+        setError('Failed to grant Drive access. Please try again.');
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again.');
+      console.error('Drive access error:', err);
+    } finally {
+      setRequesting(false);
+    }
+  };
+
+  return (
+    <Alert variant={variant} className="mt-3 mb-3">
+      <div className="d-flex align-items-start">
+        <div className="flex-grow-1">
+          <Alert.Heading className="h6">
+            <i className="fas fa-google-drive me-2"></i>
+            Google Drive Access Required
+          </Alert.Heading>
+          <p className="mb-2">
+            To attach files from Google Drive to your AI study session, we need permission to read your Drive files.
+          </p>
+          <ul className="mb-2 small">
+            <li>This is a <strong>one-time</strong> request</li>
+            <li>We only read files - never modify or delete</li>
+            <li>Access is only used for Study Assist features</li>
+          </ul>
+          {error && (
+            <p className="text-danger small mb-2">
+              <i className="fas fa-exclamation-triangle me-1"></i>
+              {error}
+            </p>
+          )}
+          <Button 
+            variant="primary"
+            size="sm"
+            onClick={handleGrantAccess}
+            disabled={requesting}
+          >
+            {requesting ? (
+              <>
+                <div className="spinner-border spinner-border-sm me-2" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                Requesting Access...
+              </>
+            ) : (
+              <>
+                <i className="fab fa-google me-2"></i>
+                Grant Drive Access
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </Alert>
+  );
+}
+
+// Modal version for standalone use
 export default function DriveAccessPrompt({ show, onHide, onSuccess }) {
-  const { ensureDriveAccess } = useAuth();
+  const { requestDriveAccess } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -12,14 +83,16 @@ export default function DriveAccessPrompt({ show, onHide, onSuccess }) {
     setError('');
     
     try {
-      const accessToken = await ensureDriveAccess();
-      if (accessToken) {
-        onSuccess();
+      const success = await requestDriveAccess();
+      if (success) {
+        if (onSuccess) onSuccess();
         onHide();
+      } else {
+        setError('Failed to grant Drive access. Please try again.');
       }
     } catch (error) {
       console.error('Drive access request failed:', error);
-      setError(error.message);
+      setError(error.message || 'An error occurred');
     } finally {
       setLoading(false);
     }

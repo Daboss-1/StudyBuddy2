@@ -31,6 +31,8 @@ export default async function handler(req, res) {
     const textMaterials = [];
 
     for (const material of materials) {
+      console.log(`DEBUG API: Processing material - downloadSupported: ${material.downloadSupported}, requiresDriveAccess: ${material.requiresDriveAccess}, title: ${material.title}`);
+      
       if (material.downloadSupported) {
         attachments.push({
           name: material.title,
@@ -43,7 +45,18 @@ export default async function handler(req, res) {
           hasFileData: !!material.fileData,
           fileSize: material.fileData ? Buffer.byteLength(material.fileData, 'base64') : 0
         });
-      } else {
+      } else if (material.requiresDriveAccess) {
+        console.log(`DEBUG API: Adding ${material.title} as requiring Drive access`);
+        // Mark materials that require Drive access so UI can prompt user
+        attachments.push({
+          name: material.title,
+          type: material.type,
+          driveFileId: material.driveFileId,
+          requiresDriveAccess: true,
+          error: 'Drive access required to attach this file'
+        });
+      } else if (material.content) {
+        // Only add to text materials if it's actual text content
         textMaterials.push({
           name: material.title,
           type: material.type,
