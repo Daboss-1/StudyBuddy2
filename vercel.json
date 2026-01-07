@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/send-homework-report",
+      "schedule": "0 19 * * *"
+    },
+    {
+      "path": "/api/send-homework-reminder",
+      "schedule": "30 23 * * *"
+    }
+  ]
+}

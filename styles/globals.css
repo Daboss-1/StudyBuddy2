@@ -1,0 +1,524 @@
+body {
+  background-color: #f8f9fa;
+  font-family: 'Arial', sans-serif;
+}
+
+.nav-item .nav-link img {
+  width: 2rem;
+  align-items: center;
+  position: absolute;
+  right: 0.5rem;
+  filter: brightness(0) invert(1);
+  transition: filter 0.3s;
+}
+
+.navbar {
+  background-color: #007bff !important;
+}
+
+.navbar-brand, .nav-link {
+  color: #fff !important;
+}
+
+/* Keep navbar hover subtle (avoid bright yellow). */
+.nav-link:hover {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.jumbotron {
+  background-color: #e9ecef;
+  border-radius: 15px;
+  padding: 2rem 2rem;
+  text-align: center;
+}
+
+.jumbotron h1 {
+  color: #007bff;
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+.jumbotron p.lead {
+  color: #6c757d;
+  font-size: 1.25rem;
+}
+
+.jumbotron .btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+  font-size: 1.25rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+}
+
+.jumbotron .btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.card {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  background-color: #007bff;
+  color: #fff;
+  border-radius: 10px 10px 0 0;
+}
+
+.card-body {
+  padding: 2rem;
+}
+
+.form-group label {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.form-control {
+  border-radius: 5px;
+  border: 1px solid #007bff;
+}
+
+.form-control:focus {
+  border-color: #0056b3;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+  border-radius: 5px;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+/* Message Bubbles Styling */
+.message-bubble {
+  display: inline-block;
+  max-width: 70%;
+  padding: 10px 15px;
+  border-radius: 15px;
+  position: relative;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.message.sent .message-bubble {
+  background-color: #007bff;
+  color: #fff;
+  border-top-right-radius: 0;
+}
+
+.message.sent .message-bubble::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: -10px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px 0 5px 10px;
+  border-color: transparent transparent transparent #007bff;
+}
+
+.message.received .message-bubble {
+  background-color: #f1f1f1;
+  color: #333;
+  border-top-left-radius: 0;
+}
+
+.message.received .message-bubble::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: -10px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px 10px 5px 0;
+  border-color: transparent #f1f1f1 transparent transparent;
+}
+
+/* Mobile Navigation */
+.navbar-bottom {
+  display: none;
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  background-color: #007bff;
+  z-index: 1030;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-around;
+  padding: 0.5rem 0;
+  border-radius: 25px;
+}
+
+.navbar-bottom .nav-item {
+  flex: 1;
+  text-align: center;
+}
+
+.navbar-bottom .nav-link {
+  color: #fff;
+  font-size: 1.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  transition: color 0.3s, transform 0.2s;
+}
+
+.navbar-bottom .nav-link:hover {
+  color: #ffdd57;
+  transform: scale(1.2);
+}
+
+.navbar-bottom .nav-link i {
+  font-size: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    display: none;
+  }
+
+  .navbar-bottom {
+    display: flex;
+  }
+
+  .card {
+    margin-bottom: 1rem;
+  }
+
+  /* Jumbotron Mobile */
+  .jumbotron {
+    padding: 1rem;
+  }
+
+  .jumbotron h1 {
+    font-size: 1.75rem;
+  }
+
+  .jumbotron p.lead {
+    font-size: 1rem;
+  }
+
+  /* Tables - Make them responsive */
+  .table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hide some table columns on mobile */
+  .table td:nth-child(2),
+  .table th:nth-child(2),
+  .table td:nth-child(3),
+  .table th:nth-child(3) {
+    display: none;
+  }
+
+  /* Cards */
+  .card-body {
+    padding: 1rem;
+  }
+
+  /* Buttons */
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-group .btn {
+    margin-bottom: 0.5rem;
+    width: 100%;
+  }
+
+  /* Modals */
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-title {
+    font-size: 1.25rem;
+  }
+
+  /* Forms */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  /* Badges */
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Cards in grid */
+  .row > [class*="col-"] {
+    margin-bottom: 1rem;
+  }
+
+  /* Assignment cards - Stack vertically */
+  .assignment-cards .card {
+    margin-bottom: 1rem;
+  }
+
+  /* Reduce padding on containers */
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Chat messages */
+  .message-bubble {
+    max-width: 85%;
+    font-size: 0.875rem;
+  }
+
+  /* Study Assist Modal - Better mobile layout */
+  .study-assist-materials {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  /* Hide "Select All" text on mobile, keep buttons */
+  .btn-sm {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Make checkboxes larger on mobile */
+  .form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.125rem;
+  }
+
+  /* Assignment status badges - wrap properly */
+  .d-flex.align-items-start {
+    flex-wrap: wrap;
+  }
+
+  /* Grade cards - adjust text size */
+  .card-body h2 {
+    font-size: 1.5rem;
+  }
+
+  /* Alert boxes */
+  .alert {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .alert-heading {
+    font-size: 1rem;
+  }
+
+  /* List items - better spacing */
+  ul, ol {
+    padding-left: 1.25rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Material list items */
+  .list-unstyled li {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Spinner - smaller on mobile */
+  .spinner-border {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  /* ReactMarkdown content */
+  .card-body pre {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+    overflow-x: auto;
+  }
+
+  .card-body code {
+    font-size: 0.8rem;
+  }
+
+  .card-body h3,
+  .card-body h4,
+  .card-body h5 {
+    font-size: 1rem;
+    margin-top: 1rem;
+  }
+
+  /* Improve course cards on mobile */
+  .card.h-100 {
+    height: auto !important;
+  }
+
+  /* Bottom spacing for fixed navbar */
+  body {
+    padding-bottom: 80px;
+  }
+
+  /* Chat rooms - better mobile view */
+  .chat-rooms {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  .chat-room-item {
+    padding: 1rem !important;
+  }
+
+  /* Dashboard header stats */
+  .dashboard-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Tabs - smaller on mobile */
+  .nav-tabs .nav-link {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Quick action cards - full width on mobile */
+  .quick-action-card {
+    margin-bottom: 1rem;
+  }
+
+  /* Period config cards - full width */
+  .period-config-card {
+    margin-bottom: 1rem;
+  }
+
+  /* Study suggestions - better spacing */
+  .study-suggestions .card {
+    margin-bottom: 1rem;
+  }
+
+  /* Activity stats - add spacing */
+  .activity-stat {
+    padding: 1rem;
+  }
+
+  /* Fix long text overflow */
+  .card-text,
+  .card-title {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Improve touch targets for links */
+  a.btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Chat container - better mobile height */
+  .chat-messages {
+    height: 300px !important;
+  }
+
+  /* Form controls - larger for touch */
+  .form-control,
+  .form-select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 44px;
+  }
+
+  /* Better spacing for card headers */
+  .card-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .card-header h4,
+  .card-header h5,
+  .card-header h6 {
+    font-size: 1rem;
+  }
+}
+
+/* Assignment Cards */
+.assignment-cards .card {
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+.assignment-cards .card:hover {
+  transform: scale(1.05);
+}
+
+.assignment-cards .card-title {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.assignment-cards .card-text {
+  margin-bottom: 0.5rem;
+}
+
+/* Loading */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50px;
+}
+
+/* Chat */
+.chat-panel {
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  background-color: #f8f9fa;
+  padding: 10px;
+}
+
+.message {
+  margin-bottom: 10px;
+}
+
+.message.sent {
+  text-align: right;
+}
+
+.message.received {
+  text-align: left;
+}

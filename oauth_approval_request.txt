@@ -1,0 +1,43 @@
+Subject: Request for OAuth App Approval - StudyBuddy Application
+
+Dear IT Administrator,
+
+I am developing an educational application called StudyBuddy that integrates with Google Classroom to help students with their assignments. The application requires access to Google Classroom data to provide AI-powered study assistance.
+
+To enable this functionality for our school domain accounts, I need the following OAuth configuration approved:
+
+**Application Details:**
+- Application Name: StudyBuddy
+- OAuth Client ID: 700180410067-93e6ftc1pnhdig04r3mjcppnci159d15.apps.googleusercontent.com
+- Developer: everett.hurder@gmail.com
+
+**Required API Scopes:**
+- https://www.googleapis.com/auth/userinfo.email (basic profile)
+- https://www.googleapis.com/auth/userinfo.profile (basic profile) 
+- https://www.googleapis.com/auth/classroom.courses.readonly (view classroom courses)
+- https://www.googleapis.com/auth/classroom.coursework.me (view student's coursework)
+- https://www.googleapis.com/auth/classroom.coursework.students.readonly (view coursework)
+- https://www.googleapis.com/auth/classroom.rosters.readonly (view class rosters)
+- https://www.googleapis.com/auth/classroom.student-submissions.me.readonly (view submissions)
+- https://www.googleapis.com/auth/classroom.courseworkmaterials.readonly (view course materials)
+- https://www.googleapis.com/auth/drive.readonly (read-only access to attached documents)
+
+**What the app does:**
+- Reads Google Classroom assignments and materials
+- Downloads attached documents (with read-only access)
+- Provides AI-powered study assistance based on assignment content
+- Does NOT modify, delete, or share any data
+- All processing is done locally/privately
+
+**Security Notes:**
+- The app only requests read-only permissions
+- No data is stored permanently or shared with third parties
+- Students maintain full control over their data
+
+Could you please add this OAuth client to the approved applications list and enable the required scopes for our domain?
+
+Thank you for your consideration.
+
+Best regards,
+[Your Name]
+[Your Student ID/Email]

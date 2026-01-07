@@ -1,0 +1,27 @@
+<!-- This is a placeholder SVG for the progress image -->
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+  <defs>
+    <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#11998e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#38ef7d;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="300" height="200" fill="url(#progressGrad)"/>
+  <rect x="40" y="40" width="220" height="120" rx="15" fill="white" opacity="0.9"/>
+  
+  <!-- Chart bars -->
+  <rect x="70" y="120" width="15" height="30" fill="#11998e" opacity="0.7"/>
+  <rect x="90" y="110" width="15" height="40" fill="#11998e" opacity="0.8"/>
+  <rect x="110" y="100" width="15" height="50" fill="#11998e" opacity="0.9"/>
+  <rect x="130" y="90" width="15" height="60" fill="#38ef7d" opacity="0.7"/>
+  <rect x="150" y="80" width="15" height="70" fill="#38ef7d" opacity="0.8"/>
+  <rect x="170" y="85" width="15" height="65" fill="#38ef7d" opacity="0.9"/>
+  <rect x="190" y="95" width="15" height="55" fill="#38ef7d" opacity="0.7"/>
+  <rect x="210" y="105" width="15" height="45" fill="#38ef7d" opacity="0.8"/>
+  
+  <!-- Trend line -->
+  <polyline points="77,135 97,125 117,115 137,105 157,95 177,100 197,110 217,120" 
+            stroke="#11998e" stroke-width="3" fill="none" opacity="0.8"/>
+  
+  <text x="150" y="185" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="white" font-weight="bold">Your Progress</text>
+</svg>
