@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/send-homework-report",
-      "schedule": "32 20 * * *"
+      "schedule": "0 19 * * *"
     },
     {
       "path": "/api/send-homework-reminder",
