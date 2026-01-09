@@ -21,6 +21,23 @@ export default async function handler(req, res) {
     console.log('DEBUG: Exchanging auth code for access token...');
     console.log('DEBUG: Auth code length:', authCode.length);
 
+    // Use NEXT_PUBLIC_GOOGLE_CLIENT_ID or GOOGLE_CLIENT_ID
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    
+    console.log('DEBUG: Client ID available:', !!clientId);
+    console.log('DEBUG: Client Secret available:', !!clientSecret);
+    
+    if (!clientId || !clientSecret) {
+      console.error('DEBUG: Missing OAuth credentials');
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error: Missing OAuth credentials',
+        missingClientId: !clientId,
+        missingClientSecret: !clientSecret,
+      });
+    }
+
     // Exchange the authorization code for tokens
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -29,8 +46,8 @@ export default async function handler(req, res) {
       },
       body: new URLSearchParams({
         code: authCode,
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        client_id: clientId,
+        client_secret: clientSecret,
         redirect_uri: redirectUri || '', // Empty for Android
         grant_type: 'authorization_code',
       }),
